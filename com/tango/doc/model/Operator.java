@@ -1,4 +1,4 @@
-package com.tango.console.role;
+package com.tango.doc.model;
 
 public class Operator extends AbstractUser {
     public Operator(String name, String password, String role) {
@@ -17,7 +17,8 @@ public class Operator extends AbstractUser {
                 .append("================").append("4.修改密码").append("================\n")
                 .append("================").append("5.退   出").append("================\n")
                 .append(tipMenu);
-    
+
         System.out.print(builder.toString());
     }
+
 }

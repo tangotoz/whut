@@ -1,12 +1,12 @@
-package com.tango.console;
+package com.tango.doc;
 
 import java.util.Enumeration;
 
-import com.tango.console.role.AbstractUser;
-import com.tango.console.service.DataProcessing;
-import com.tango.console.utils.ScanUtils;
+import com.tango.doc.model.*;
+import com.tango.doc.service.DataProcessing;
+import com.tango.doc.utils.ScanUtils;
 import java.sql.*;
-import java.io.IOException;
+import java.io.*;
 
 public class Main {
     public static void main(String[] args) {
@@ -27,11 +27,11 @@ public class Main {
                     case 2 -> exit();
                 }
             }
-        } catch(IOException | SQLException ex) {
+        } catch (IOException | SQLException ex) {
             ex.printStackTrace();
         }
     }
-    
+
     public static void exit() {
         System.out.println("确认退出吗？(Y/N)");
         char confirmation = ScanUtils.readConfrimationSelection();
@@ -40,8 +40,8 @@ public class Main {
             System.exit(0);
         }
     }
-    
-    public static void login() throws SQLException, IOException{
+
+    public static void login() throws SQLException, IOException {
         String name, password;
 
         name = ScanUtils.readString("请输入名字:");
@@ -59,14 +59,14 @@ public class Main {
             System.out.println("登录失败，请检查用户名和密码后重试。");
         }
     }
-    
-    public static void loginAsBrowser(AbstractUser user) throws SQLException,IOException{
+
+    public static void loginAsBrowser(AbstractUser user) throws SQLException, IOException {
         while (true) {
             user.showMenu();
 
             int choice = ScanUtils.readMenuSelection(4);
             switch (choice) {
-                case 1 -> user.downloadFile(null);
+                case 1 -> downloadFile(user);
                 case 2 -> user.showFileList();
                 case 3 -> changePassword(user);
                 case 4 -> user.exitSystem();
@@ -74,13 +74,13 @@ public class Main {
         }
     }
 
-    public static void loginAsOperator(AbstractUser user) throws SQLException, IOException{
+    public static void loginAsOperator(AbstractUser user) throws SQLException, IOException {
         while (true) {
             user.showMenu();
             int choice = ScanUtils.readMenuSelection(5);
             switch (choice) {
-                case 1 -> System.out.println("上传档案...");
-                case 2 -> user.downloadFile(null);
+                case 1 -> uploadDoc(user);
+                case 2 -> downloadFile(user);
                 case 3 -> user.showFileList();
                 case 4 -> changePassword(user);
                 case 5 -> user.exitSystem();
@@ -97,7 +97,7 @@ public class Main {
                 case 2 -> deleteUser();
                 case 3 -> updateUser();
                 case 4 -> listUsers();
-                case 5 -> user.downloadFile(null);
+                case 5 -> downloadFile(user);
                 case 6 -> user.showFileList();
                 case 7 -> changePassword(user);
                 case 8 -> user.exitSystem();
@@ -119,7 +119,7 @@ public class Main {
         System.out.println("密码修改成功。");
     }
 
-    public static void insertUser() throws SQLException{
+    public static void insertUser() throws SQLException {
         String name, password, role;
         name = ScanUtils.readString("请输入新用户名:");
         password = ScanUtils.readString("请输入新用户密码:");
@@ -132,7 +132,7 @@ public class Main {
         }
     }
 
-    public static void deleteUser() throws SQLException{
+    public static void deleteUser() throws SQLException {
         String name;
         name = ScanUtils.readString("请输入要删除的用户名:");
         boolean isDelete = DataProcessing.deleteUser(name);
@@ -143,7 +143,7 @@ public class Main {
         }
     }
 
-    public static void updateUser() throws SQLException{
+    public static void updateUser() throws SQLException {
         String name, password, role;
         name = ScanUtils.readString("请输入要更新的用户名:");
         password = ScanUtils.readString("请输入新密码:");
@@ -156,12 +156,45 @@ public class Main {
         }
     }
 
-    public static void listUsers() throws SQLException{
+    public static void listUsers() throws SQLException {
         Enumeration<AbstractUser> users = DataProcessing.listUser();
         while (users.hasMoreElements()) {
             AbstractUser user = users.nextElement();
 
             System.out.println("用户名: " + user.getName() + ", 角色: " + user.getRole() + ",密码:" + user.getPassword());
+        }
+    }
+
+    public static void uploadDoc(AbstractUser user) {
+        String id = ScanUtils.readString("请输入档案的id:");
+        String creator = user.getName();
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        String description = ScanUtils.readString("请输入对文件的描述:");
+        String uploadPath = ScanUtils.readString("请输入上传文件的路径:");
+        String fileName = ScanUtils.readString("请输入文件名:");
+
+        try (FileInputStream fis = new FileInputStream(new File(uploadPath, fileName));
+                FileOutputStream fos = new FileOutputStream(new File("/home/tango/Downloads/doc", fileName))) {
+            byte[] bytes = new byte[1024];
+            int len = 0;
+            while ((len = fis.read(bytes)) != -1) {
+                fos.write(bytes, 0, len);
+            }
+            DataProcessing.insertDoc(id, creator, timestamp, description, fileName);
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public static void downloadFile(AbstractUser user) throws SQLException, IOException {
+        String id = ScanUtils.readString("请输入你要下载文件的id:");
+        boolean isDownload = user.downloadFile(id);
+        if (isDownload) {
+            System.out.println("下载成功");
+        } else {
+            System.out.println("下载失败");
         }
     }
 }

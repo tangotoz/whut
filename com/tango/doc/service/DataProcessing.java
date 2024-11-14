@@ -1,8 +1,9 @@
-package com.tango.console.service;
+package com.tango.doc.service;
 
-import java.util.*;
+import java.util.Enumeration;
+import java.util.Hashtable;
 import java.sql.*;
-import com.tango.console.role.*;
+import com.tango.doc.model.*;
 
 /**
  * TODO 数据处理类
@@ -13,9 +14,9 @@ import com.tango.console.role.*;
 public class DataProcessing {
 
     private static boolean connectToDB = false;
-    static final double EXCEPTION_CONNECT_PROBABILITY = 0.1;
-    static final double EXCEPTION_SQL_PROBABILITY = 0.9;
+
     static Hashtable<String, AbstractUser> users;
+    static Hashtable<String, Doc> docs;
 
     static enum ROLE_ENUM {
         /**
@@ -44,32 +45,92 @@ public class DataProcessing {
 
     static {
         users = new Hashtable<String, AbstractUser>();
-        users.put("jack", new Operator("jack", "123", "operator"));
         users.put("rose", new Browser("rose", "123", "browser"));
+        users.put("jack", new Operator("jack", "123", "operator"));
         users.put("kate", new Administrator("kate", "123", "administrator"));
-		init();
+        init();
+
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        docs = new Hashtable<String, Doc>();
+        docs.put("0001", new Doc("0001", "jack", timestamp, "Doc Source Java", "Doc.java"));
     }
 
     /**
      * TODO 初始化，连接数据库
-     *
+     * 
      * @param
      * @return void
      * @throws
      */
     public static void init() {
-        // update database connection status
-        double ranValue = Math.random();
-        if (ranValue > EXCEPTION_CONNECT_PROBABILITY) {
-            connectToDB = true;
-        } else {
-            connectToDB = false;
+        connectToDB = true;
+    }
+
+    /**
+     * TODO 按档案编号搜索档案信息，返回null时表明未找到
+     * 
+     * @param id
+     * @return Doc
+     * @throws SQLException
+     */
+    public static Doc searchDoc(String id) throws SQLException {
+        if (!connectToDB) {
+            throw new SQLException("Not Connected to Database");
+        }
+        if (docs.containsKey(id)) {
+            Doc temp = docs.get(id);
+            return temp;
+        }
+        return null;
+    }
+
+    /**
+     * TODO 列出所有档案信息
+     * 
+     * @param
+     * @return Enumeration<Doc>
+     * @throws SQLException
+     */
+    public static Enumeration<Doc> listDoc() throws SQLException {
+        if (!connectToDB) {
+            throw new SQLException("Not Connected to Database");
+        }
+
+        Enumeration<Doc> e = docs.elements();
+        return e;
+    }
+
+    /**
+     * TODO 插入新的档案
+     * 
+     * @param id
+     * @param creator
+     * @param timestamp
+     * @param description
+     * @param filename
+     * @return boolean
+     * @throws SQLException
+     */
+    public static boolean insertDoc(String id, String creator, Timestamp timestamp, String description, String filename)
+            throws SQLException {
+        Doc doc;
+
+        if (!connectToDB) {
+            throw new SQLException("Not Connected to Database");
+        }
+
+        if (docs.containsKey(id))
+            return false;
+        else {
+            doc = new Doc(id, creator, timestamp, description, filename);
+            docs.put(id, doc);
+            return true;
         }
     }
 
     /**
      * TODO 按用户名搜索用户，返回null时表明未找到符合条件的用户
-     *
+     * 
      * @param name 用户名
      * @return AbstractUser
      * @throws SQLException
@@ -78,10 +139,7 @@ public class DataProcessing {
         if (!connectToDB) {
             throw new SQLException("Not Connected to Database");
         }
-        double ranValue = Math.random();
-        if (ranValue > EXCEPTION_SQL_PROBABILITY) {
-            throw new SQLException("Error in executing Query");
-        }
+
         if (users.containsKey(name)) {
             return users.get(name);
         }
@@ -90,7 +148,7 @@ public class DataProcessing {
 
     /**
      * TODO 按用户名、密码搜索用户，返回null时表明未找到符合条件的用户
-     *
+     * 
      * @param name     用户名
      * @param password 密码
      * @return AbstractUser
@@ -100,10 +158,7 @@ public class DataProcessing {
         if (!connectToDB) {
             throw new SQLException("Not Connected to Database");
         }
-        double ranValue = Math.random();
-        if (ranValue > EXCEPTION_SQL_PROBABILITY) {
-            throw new SQLException("Error in executing Query");
-        }
+
         if (users.containsKey(name)) {
             AbstractUser temp = users.get(name);
             if ((temp.getPassword()).equals(password)) {
@@ -115,7 +170,7 @@ public class DataProcessing {
 
     /**
      * TODO 取出所有的用户
-     *
+     * 
      * @param
      * @return Enumeration<AbstractUser>
      * @throws SQLException
@@ -124,17 +179,14 @@ public class DataProcessing {
         if (!connectToDB) {
             throw new SQLException("Not Connected to Database");
         }
-        double ranValue = Math.random();
-        if (ranValue > EXCEPTION_SQL_PROBABILITY) {
-            throw new SQLException("Error in executing Query");
-        }
+
         Enumeration<AbstractUser> e = users.elements();
         return e;
     }
 
     /**
      * TODO 修改用户信息
-     *
+     * 
      * @param name     用户名
      * @param password 密码
      * @param role     角色
@@ -143,13 +195,6 @@ public class DataProcessing {
      */
     public static boolean updateUser(String name, String password, String role) throws SQLException {
         AbstractUser user;
-        if (!connectToDB) {
-            throw new SQLException("Not Connected to Database");
-        }
-        double ranValue = Math.random();
-        if (ranValue > EXCEPTION_SQL_PROBABILITY) {
-            throw new SQLException("Error in executing Update");
-        }
         if (users.containsKey(name)) {
             switch (ROLE_ENUM.valueOf(role.toLowerCase())) {
                 case administrator:
@@ -170,7 +215,7 @@ public class DataProcessing {
 
     /**
      * TODO 插入新用户
-     *
+     * 
      * @param name     用户名
      * @param password 密码
      * @param role     角色
@@ -179,13 +224,6 @@ public class DataProcessing {
      */
     public static boolean insertUser(String name, String password, String role) throws SQLException {
         AbstractUser user;
-        if (!connectToDB) {
-            throw new SQLException("Not Connected to Database");
-        }
-        double ranValue = Math.random();
-        if (ranValue > EXCEPTION_SQL_PROBABILITY) {
-            throw new SQLException("Error in executing Insert");
-        }
         if (users.containsKey(name)) {
             return false;
         } else {
@@ -206,19 +244,12 @@ public class DataProcessing {
 
     /**
      * TODO 删除指定用户
-     *
+     * 
      * @param name 用户名
      * @return boolean
      * @throws SQLException
      */
     public static boolean deleteUser(String name) throws SQLException {
-        if (!connectToDB) {
-            throw new SQLException("Not Connected to Database");
-        }
-        double ranValue = Math.random();
-        if (ranValue > EXCEPTION_SQL_PROBABILITY) {
-            throw new SQLException("Error in executing Delete");
-        }
         if (users.containsKey(name)) {
             users.remove(name);
             return true;
@@ -229,7 +260,7 @@ public class DataProcessing {
 
     /**
      * TODO 关闭数据库连接
-     *
+     * 
      * @param
      * @return void
      * @throws
@@ -238,11 +269,7 @@ public class DataProcessing {
         if (connectToDB) {
             // close Statement and Connection
             try {
-                if (Math.random() > EXCEPTION_SQL_PROBABILITY) {
-                    throw new SQLException("Error in disconnecting DB");
-                }
-            } catch (SQLException sqlException) {
-                sqlException.printStackTrace();
+
             } finally {
                 connectToDB = false;
             }

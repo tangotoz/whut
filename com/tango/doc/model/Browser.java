@@ -1,4 +1,4 @@
-package com.tango.console.role;
+package com.tango.doc.model;
 
 public class Browser extends AbstractUser {
     public Browser(String name, String password, String role) {
@@ -11,9 +11,9 @@ public class Browser extends AbstractUser {
         String tipMenu = "请选择菜单:";
         StringBuilder builder = new StringBuilder();
         builder.append("==========").append(tipSystem).append("========\n")
-                .append("================").append("1.下载文件").append("================\n").
-                append("================").append("2.文件列表").append("================\n").
-                append("================").append("3.修改密码").append("================\n")
+                .append("================").append("1.下载文件").append("================\n").append("================")
+                .append("2.文件列表").append("================\n").append("================").append("3.修改密码")
+                .append("================\n")
                 .append("================").append("4.退   出").append("================\n").append(tipMenu);
 
         System.out.print(builder.toString());

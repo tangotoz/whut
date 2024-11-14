@@ -1,6 +1,6 @@
-package com.tango.console.role;
+package com.tango.doc.model;
 
-public class Administrator extends AbstractUser{
+public class Administrator extends AbstractUser {
     public Administrator(String name, String password, String role) {
         super(name, password, role);
     }
